@@ -1,3 +1,6 @@
+use crate::NUM_ROWS;
+
+#[derive(Debug)]
 pub enum TBlockType {
     IBlock,
     JBlock,
@@ -6,7 +9,7 @@ pub enum TBlockType {
     TBlock,
     SBlock,
 }
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum TBlockColor {
     Red,
     Green,
@@ -16,27 +19,40 @@ pub enum TBlockColor {
     Empty,
 }
 
+#[derive(Debug)]
 pub enum TBlockOrientation {
     HORIZONTAL,
     VERTICAL,
 }
 
+#[derive(Debug)]
 pub struct TetrisBlock {
-    x: u8,
-    y: u8,
+    x: usize,
+    y: usize,
     block: TBlockType,
     orientation: TBlockOrientation,
 }
 
 impl TetrisBlock {
-    fn create(&mut self, x: u8, y: u8, block: TBlockType) {
-        self.x = x;
-        self.y = y;
-        self.block = block;
-        self.orientation = TBlockOrientation::VERTICAL
+    pub fn new(x: usize, y: usize, block: TBlockType) -> Self {
+        Self {
+            x,
+            y,
+            block,
+            orientation: TBlockOrientation::HORIZONTAL,
+        }
     }
 
-    fn move_down(&mut self) {
-        self.y += 1
+    pub fn get_pos(&self) -> (usize, usize) {
+        return (self.x, self.y);
+    }
+
+    pub fn move_down(&mut self) -> Result<bool, bool> {
+        if self.y < NUM_ROWS - 1 {
+            self.y += 1;
+
+            return Ok(false);
+        }
+        return Ok(true);
     }
 }

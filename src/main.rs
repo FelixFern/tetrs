@@ -1,4 +1,4 @@
-use std::io::{self, Empty};
+use std::io::{self};
 
 use ratatui::{
     buffer::Buffer,
@@ -8,21 +8,45 @@ use ratatui::{
     widgets::{Block, Borders, Widget},
     Frame,
 };
-use tetris::TBlockColor;
+use tetris::{TBlockColor, TetrisBlock};
 
 mod tetris;
 mod tui;
 
-#[derive(Debug, Default)]
+pub const NUM_ROWS: usize = 20;
+pub const NUM_COLS: usize = 10;
+const FRAMES_PER_MOVE: usize = 30;
+
+#[derive(Debug)]
 pub struct App {
     exit: bool,
+    grid: [[TBlockColor; NUM_COLS]; NUM_ROWS],
+    tetrising: bool,
+    tetris_block: TetrisBlock,
+    frame_count: usize,
+    curr_x: usize,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        let grid = [[TBlockColor::Empty; NUM_COLS]; NUM_ROWS];
+        App {
+            exit: false,
+            grid,
+            tetrising: false,
+            tetris_block: TetrisBlock::new(0, 0, tetris::TBlockType::IBlock),
+            frame_count: 0,
+            curr_x: 0,
+        }
+    }
 }
 
 impl App {
     fn run(&mut self, terminal: &mut tui::Tui) -> io::Result<()> {
         while !self.exit {
+            self.update();
             terminal.draw(|f: &mut Frame| self.render_frame(f))?;
-            self.handle_events()?;
+            // self.handle_events()?;
         }
         Ok(())
     }
@@ -38,6 +62,7 @@ impl App {
             }
             _ => {}
         };
+
         Ok(())
     }
 
@@ -51,25 +76,40 @@ impl App {
             _ => {}
         }
     }
+
+    fn update(&mut self) {
+        self.frame_count += 1;
+
+        if self.frame_count >= FRAMES_PER_MOVE {
+            if self.tetris_block.move_down().unwrap() {
+                self.curr_x += 1;
+
+                let (x, y) = self.tetris_block.get_pos();
+                self.grid[y][x] = TBlockColor::Green;
+                self.tetris_block = TetrisBlock::new(self.curr_x, 0, tetris::TBlockType::IBlock)
+            }
+            self.frame_count = 0;
+        }
+    }
 }
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        const NUM_ROWS: u16 = 20;
-        const NUM_COLS: u16 = 10;
-
-        let mut grid = [[TBlockColor::Empty; NUM_COLS as usize]; NUM_ROWS as usize];
-
         let cell_size = std::cmp::min(
-            area.width / NUM_COLS * 2 as u16,
+            area.width / (NUM_COLS as u16) * 2,
             area.height / NUM_ROWS as u16,
         );
 
-        let total_width = cell_size * NUM_COLS * 2 as u16;
+        let total_width = cell_size * (NUM_COLS as u16) * 2;
         let total_height = cell_size * NUM_ROWS as u16;
 
         let start_x = area.x + (area.width - total_width) / 2;
         let start_y = area.y + (area.height - total_height) / 2;
+
+        let mut moving_grid = [[TBlockColor::Empty; NUM_COLS]; NUM_ROWS];
+
+        let (tetris_x, tetris_y) = self.tetris_block.get_pos();
+        moving_grid[tetris_y][tetris_x] = TBlockColor::Blue;
 
         let row_constraint = (0..NUM_ROWS)
             .map(|_| Constraint::Length(cell_size))
@@ -92,13 +132,28 @@ impl Widget for &App {
                 .split(*row);
 
             for (x, column) in columns.iter().enumerate() {
-                let color = match grid[y][x] {
+                let moving_grid_color: Color = match moving_grid[y][x] {
                     TBlockColor::Empty => Color::Reset,
                     TBlockColor::Red => Color::Red,
                     TBlockColor::Green => Color::Green,
                     TBlockColor::Blue => Color::Blue,
                     TBlockColor::Yellow => Color::Yellow,
                     TBlockColor::Magenta => Color::Magenta,
+                };
+
+                let grid_color: Color = match self.grid[y][x] {
+                    TBlockColor::Empty => Color::Reset,
+                    TBlockColor::Red => Color::Red,
+                    TBlockColor::Green => Color::Green,
+                    TBlockColor::Blue => Color::Blue,
+                    TBlockColor::Yellow => Color::Yellow,
+                    TBlockColor::Magenta => Color::Magenta,
+                };
+
+                let color = if grid_color == Color::Reset {
+                    moving_grid_color
+                } else {
+                    grid_color
                 };
 
                 let block = Block::default()
