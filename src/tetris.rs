@@ -17,10 +17,10 @@ impl TBlockType {
         match self {
             &Self::IBlock => [(0, 0), (1, 0), (2, 0), (3, 0)],
             &Self::LBlock => [(0, 0), (0, 1), (0, 2), (1, 2)],
-            &Self::JBlock => [(1, 0), (1, 1), (1, 2), (2, 1)],
+            &Self::JBlock => [(1, 0), (1, 1), (1, 2), (2, 2)],
             &Self::ZBlock => [(0, 0), (1, 0), (1, 1), (2, 1)],
             &Self::SBlock => [(0, 1), (1, 1), (1, 0), (2, 0)],
-            &Self::TBlock => [(0, 0), (1, 0), (1, 1), (2, 0)],
+            &Self::TBlock => [(0, 1), (1, 1), (1, 0), (2, 1)],
         }
     }
     fn values() -> &'static [TBlockType] {
@@ -54,9 +54,10 @@ pub enum TBlockColor {
 }
 
 #[derive(Debug)]
-pub enum HorizontalMovement {
+pub enum ColidingDirection {
     Left,
     Right,
+    Down,
 }
 
 #[derive(Debug)]
@@ -95,7 +96,11 @@ impl TetrisBlock {
     pub fn move_down(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) -> bool {
         let mut new_pos = self.pos.clone();
         for i in 0..new_pos.len() {
-            if self.is_colliding(grid, (new_pos[i].0 as usize, new_pos[i].1 as usize + 1)) {
+            if self.is_colliding(
+                grid,
+                (new_pos[i].0 as i8, new_pos[i].1 as i8 + 1),
+                ColidingDirection::Down,
+            ) {
                 return false;
             } else {
                 new_pos[i].1 += 1
@@ -105,25 +110,79 @@ impl TetrisBlock {
         return true;
     }
 
-    pub fn move_horizontal(&self, movement: HorizontalMovement) {
-        fn move_left(grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {}
+    pub fn move_left(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {
+        let mut new_pos = self.pos.clone();
+        let mut moveable = true;
 
-        fn move_right(grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {}
-        // match movement {
-        //     HorizontalMovement::Left =>
-        // }
+        for i in 0..new_pos.len() {
+            if self.is_colliding(
+                grid,
+                (new_pos[i].0 as i8 - 1, new_pos[i].1 as i8),
+                ColidingDirection::Left,
+            ) {
+                moveable = false;
+            } else {
+                new_pos[i].0 -= 1
+            }
+        }
+
+        if moveable {
+            self.pos = new_pos;
+        }
+    }
+
+    pub fn move_right(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {
+        let mut new_pos = self.pos.clone();
+        let mut moveable = true;
+
+        for i in 0..new_pos.len() {
+            if self.is_colliding(
+                grid,
+                (new_pos[i].0 as i8 + 1, new_pos[i].1 as i8),
+                ColidingDirection::Right,
+            ) {
+                moveable = false;
+            } else {
+                new_pos[i].0 += 1
+            }
+        }
+
+        if moveable {
+            self.pos = new_pos;
+        }
     }
 
     fn is_colliding(
         &self,
         grid: [[TBlockColor; NUM_COLS]; NUM_ROWS],
-        new_pos: (usize, usize),
+        new_pos: (i8, i8),
+        direction: ColidingDirection,
     ) -> bool {
-        if new_pos.1 > NUM_ROWS - 1 {
-            return true;
-        } else if grid[new_pos.1][new_pos.0] != TBlockColor::Empty {
-            return true;
+        match direction {
+            ColidingDirection::Down => {
+                if new_pos.1 > (NUM_ROWS - 1) as i8 {
+                    return true;
+                } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
+                    return true;
+                }
+                return false;
+            }
+            ColidingDirection::Left => {
+                if new_pos.0 < 0 {
+                    return true;
+                } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
+                    return true;
+                }
+                return false;
+            }
+            ColidingDirection::Right => {
+                if new_pos.0 > (NUM_COLS - 1) as i8 {
+                    return true;
+                } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
+                    return true;
+                }
+                return false;
+            }
         }
-        return false;
     }
 }

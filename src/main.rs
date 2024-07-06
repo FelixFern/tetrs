@@ -69,6 +69,12 @@ impl App {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
+            KeyCode::Left => self.tetris_block.move_left(self.grid),
+            KeyCode::Right => self.tetris_block.move_right(self.grid),
+            KeyCode::Down => {
+                self.tetris_block.move_down(self.grid);
+                ()
+            }
             _ => {}
         }
     }
