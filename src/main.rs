@@ -15,16 +15,14 @@ mod tui;
 
 pub const NUM_ROWS: usize = 20;
 pub const NUM_COLS: usize = 10;
-const FRAMES_PER_MOVE: usize = 30;
+const FRAMES_PER_MOVE: usize = 1;
 
 #[derive(Debug)]
 pub struct App {
     exit: bool,
     grid: [[TBlockColor; NUM_COLS]; NUM_ROWS],
-    tetrising: bool,
     tetris_block: TetrisBlock,
     frame_count: usize,
-    curr_x: usize,
 }
 
 impl Default for App {
@@ -33,10 +31,8 @@ impl Default for App {
         App {
             exit: false,
             grid,
-            tetrising: false,
-            tetris_block: TetrisBlock::new(0, 0, tetris::TBlockType::IBlock),
+            tetris_block: TetrisBlock::new(1, 0, tetris::TBlockType::random()),
             frame_count: 0,
-            curr_x: 0,
         }
     }
 }
@@ -46,7 +42,7 @@ impl App {
         while !self.exit {
             self.update();
             terminal.draw(|f: &mut Frame| self.render_frame(f))?;
-            // self.handle_events()?;
+            self.handle_events()?;
         }
         Ok(())
     }
@@ -81,12 +77,11 @@ impl App {
         self.frame_count += 1;
 
         if self.frame_count >= FRAMES_PER_MOVE {
-            if self.tetris_block.move_down().unwrap() {
-                self.curr_x += 1;
+            if !self.tetris_block.move_down(self.grid) {
+                let (block, color) = self.tetris_block.get_pos();
+                block.map(|f| self.grid[f.1 as usize][f.0 as usize] = color);
 
-                let (x, y) = self.tetris_block.get_pos();
-                self.grid[y][x] = TBlockColor::Green;
-                self.tetris_block = TetrisBlock::new(self.curr_x, 0, tetris::TBlockType::IBlock)
+                self.tetris_block = TetrisBlock::new(4, 0, tetris::TBlockType::random())
             }
             self.frame_count = 0;
         }
@@ -106,10 +101,12 @@ impl Widget for &App {
         let start_x = area.x + (area.width - total_width) / 2;
         let start_y = area.y + (area.height - total_height) / 2;
 
+        // Resets Moving Grid
         let mut moving_grid = [[TBlockColor::Empty; NUM_COLS]; NUM_ROWS];
 
-        let (tetris_x, tetris_y) = self.tetris_block.get_pos();
-        moving_grid[tetris_y][tetris_x] = TBlockColor::Blue;
+        let (block, color) = self.tetris_block.get_pos();
+
+        block.map(|f| moving_grid[f.1 as usize][f.0 as usize] = color);
 
         let row_constraint = (0..NUM_ROWS)
             .map(|_| Constraint::Length(cell_size))
@@ -139,6 +136,7 @@ impl Widget for &App {
                     TBlockColor::Blue => Color::Blue,
                     TBlockColor::Yellow => Color::Yellow,
                     TBlockColor::Magenta => Color::Magenta,
+                    TBlockColor::Cyan => Color::Cyan,
                 };
 
                 let grid_color: Color = match self.grid[y][x] {
@@ -148,6 +146,7 @@ impl Widget for &App {
                     TBlockColor::Blue => Color::Blue,
                     TBlockColor::Yellow => Color::Yellow,
                     TBlockColor::Magenta => Color::Magenta,
+                    TBlockColor::Cyan => Color::Cyan,
                 };
 
                 let color = if grid_color == Color::Reset {
