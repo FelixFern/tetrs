@@ -57,14 +57,6 @@ pub enum TBlockColor {
     Orange,
     Empty,
 }
-
-#[derive(Debug)]
-pub enum ColidingDirection {
-    Left,
-    Right,
-    Down,
-}
-
 #[derive(Debug)]
 pub struct TetrisBlock {
     color: TBlockColor,
@@ -102,11 +94,7 @@ impl TetrisBlock {
     pub fn move_down(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) -> bool {
         let mut new_pos = self.pos.clone();
         for i in 0..new_pos.len() {
-            if self.is_colliding(
-                grid,
-                (new_pos[i].0 as i8, new_pos[i].1 as i8 + 1),
-                ColidingDirection::Down,
-            ) {
+            if self.is_colliding(grid, (new_pos[i].0 as i8, new_pos[i].1 as i8 + 1)) {
                 return false;
             } else {
                 new_pos[i].1 += 1
@@ -121,15 +109,11 @@ impl TetrisBlock {
         let mut moveable = true;
 
         for i in 0..new_pos.len() {
-            if self.is_colliding(
-                grid,
-                (new_pos[i].0 as i8 - 1, new_pos[i].1 as i8),
-                ColidingDirection::Left,
-            ) {
+            if self.is_colliding(grid, (new_pos[i].0 as i8 - 1, new_pos[i].1 as i8)) {
                 moveable = false;
-            } else {
-                new_pos[i].0 -= 1
+                break;
             }
+            new_pos[i].0 -= 1
         }
 
         if moveable {
@@ -142,15 +126,11 @@ impl TetrisBlock {
         let mut moveable = true;
 
         for i in 0..new_pos.len() {
-            if self.is_colliding(
-                grid,
-                (new_pos[i].0 as i8 + 1, new_pos[i].1 as i8),
-                ColidingDirection::Right,
-            ) {
+            if self.is_colliding(grid, (new_pos[i].0 as i8 + 1, new_pos[i].1 as i8)) {
                 moveable = false;
-            } else {
-                new_pos[i].0 += 1
+                break;
             }
+            new_pos[i].0 += 1
         }
 
         if moveable {
@@ -158,37 +138,66 @@ impl TetrisBlock {
         }
     }
 
-    fn is_colliding(
-        &self,
-        grid: [[TBlockColor; NUM_COLS]; NUM_ROWS],
-        new_pos: (i8, i8),
-        direction: ColidingDirection,
-    ) -> bool {
-        match direction {
-            ColidingDirection::Down => {
-                if new_pos.1 > (NUM_ROWS - 1) as i8 {
-                    return true;
-                } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
-                    return true;
-                }
-                return false;
+    pub fn rotate_clockwise(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {
+        let center_x = self.pos.iter().map(|&(x, _)| x as i8).sum::<i8>() / 4;
+        let center_y = self.pos.iter().map(|&(_, y)| y as i8).sum::<i8>() / 4;
+        let mut rotateable = true;
+
+        let mut new_pos = self.pos.clone();
+
+        for pos in &mut new_pos {
+            let (f_x, f_y) = *pos;
+            let rel_x = f_x as i8 - center_x;
+            let rel_y = f_y as i8 - center_y;
+            let rotated_x = center_x + rel_y;
+            let rotated_y = center_y - rel_x;
+
+            if self.is_colliding(grid, (rotated_x, rotated_y)) {
+                rotateable = false;
+                break;
             }
-            ColidingDirection::Left => {
-                if new_pos.0 < 0 {
-                    return true;
-                } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
-                    return true;
-                }
-                return false;
-            }
-            ColidingDirection::Right => {
-                if new_pos.0 > (NUM_COLS - 1) as i8 {
-                    return true;
-                } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
-                    return true;
-                }
-                return false;
-            }
+
+            *pos = (rotated_x as u8, rotated_y as u8);
         }
+
+        if rotateable {
+            self.pos = new_pos
+        }
+    }
+
+    pub fn rotate_counter_clockwise(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {
+        let center_x = self.pos.iter().map(|&(x, _)| x as i8).sum::<i8>() / 4;
+        let center_y = self.pos.iter().map(|&(_, y)| y as i8).sum::<i8>() / 4;
+        let mut rotateable = true;
+
+        let mut new_pos = self.pos.clone();
+
+        for pos in &mut new_pos {
+            let (f_x, f_y) = *pos;
+            let rel_x = f_x as i8 - center_x;
+            let rel_y = f_y as i8 - center_y;
+            let rotated_x = center_x - rel_y;
+            let rotated_y = center_y + rel_x;
+
+            if self.is_colliding(grid, (rotated_x, rotated_y)) {
+                rotateable = false;
+                break;
+            }
+
+            *pos = (rotated_x as u8, rotated_y as u8);
+        }
+
+        if rotateable {
+            self.pos = new_pos
+        }
+    }
+
+    fn is_colliding(&self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS], new_pos: (i8, i8)) -> bool {
+        if new_pos.1 > (NUM_ROWS - 1) as i8 || new_pos.0 > (NUM_COLS - 1) as i8 || new_pos.0 < 0 {
+            return true;
+        } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
+            return true;
+        }
+        return false;
     }
 }

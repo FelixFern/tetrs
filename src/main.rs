@@ -78,6 +78,8 @@ impl App {
                 self.tetris_block.move_down(self.grid);
                 ()
             }
+            KeyCode::Char('z') => self.tetris_block.rotate_counter_clockwise(self.grid),
+            KeyCode::Char('x') => self.tetris_block.rotate_clockwise(self.grid),
             _ => {}
         }
     }
