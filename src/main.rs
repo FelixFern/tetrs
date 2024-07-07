@@ -4,7 +4,8 @@ use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
+    style::{Color, Style, Stylize},
+    symbols,
     widgets::{Block, Borders, Widget},
     Frame,
 };
@@ -23,6 +24,7 @@ pub struct App {
     grid: [[TBlockColor; NUM_COLS]; NUM_ROWS],
     tetris_block: TetrisBlock,
     frame_count: usize,
+    score: u128,
 }
 
 impl Default for App {
@@ -33,6 +35,7 @@ impl Default for App {
             grid,
             tetris_block: TetrisBlock::new(1, 0, tetris::TBlockType::random()),
             frame_count: 0,
+            score: 0,
         }
     }
 }
@@ -92,6 +95,12 @@ impl App {
             self.frame_count = 0;
         }
     }
+
+    // fn clear_line(&mut self) {
+    //     for y in (0..NUM_ROWS).rev() {
+    //         for x in 0..NUM_COLS {}
+    //     }
+    // }
 }
 
 impl Widget for &App {
@@ -143,6 +152,7 @@ impl Widget for &App {
                     TBlockColor::Yellow => Color::Yellow,
                     TBlockColor::Magenta => Color::Magenta,
                     TBlockColor::Cyan => Color::Cyan,
+                    TBlockColor::Orange => Color::Indexed(208),
                 };
 
                 let grid_color: Color = match self.grid[y][x] {
@@ -153,6 +163,7 @@ impl Widget for &App {
                     TBlockColor::Yellow => Color::Yellow,
                     TBlockColor::Magenta => Color::Magenta,
                     TBlockColor::Cyan => Color::Cyan,
+                    TBlockColor::Orange => Color::Indexed(208),
                 };
 
                 let color = if grid_color == Color::Reset {
@@ -163,7 +174,9 @@ impl Widget for &App {
 
                 let block = Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(color));
+                    .border_set(symbols::border::DOUBLE)
+                    .border_style(Style::default().fg(color))
+                    .bg(color);
 
                 block.render(*column, buf);
             }

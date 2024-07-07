@@ -1,4 +1,5 @@
 use rand::{seq::SliceRandom, thread_rng};
+use ratatui::style::Color;
 
 use crate::{NUM_COLS, NUM_ROWS};
 
@@ -10,6 +11,7 @@ pub enum TBlockType {
     ZBlock,
     TBlock,
     SBlock,
+    OBlock,
 }
 
 impl TBlockType {
@@ -17,10 +19,11 @@ impl TBlockType {
         match self {
             &Self::IBlock => [(0, 0), (1, 0), (2, 0), (3, 0)],
             &Self::LBlock => [(0, 0), (0, 1), (0, 2), (1, 2)],
-            &Self::JBlock => [(1, 0), (1, 1), (1, 2), (2, 2)],
+            &Self::JBlock => [(1, 0), (1, 1), (1, 2), (0, 2)],
             &Self::ZBlock => [(0, 0), (1, 0), (1, 1), (2, 1)],
             &Self::SBlock => [(0, 1), (1, 1), (1, 0), (2, 0)],
             &Self::TBlock => [(0, 1), (1, 1), (1, 0), (2, 1)],
+            &Self::OBlock => [(0, 0), (0, 1), (1, 0), (1, 1)],
         }
     }
     fn values() -> &'static [TBlockType] {
@@ -31,6 +34,7 @@ impl TBlockType {
             TBlockType::ZBlock,
             TBlockType::TBlock,
             TBlockType::SBlock,
+            TBlockType::OBlock,
         ];
         BLOCK_TYPES
     }
@@ -50,6 +54,7 @@ pub enum TBlockColor {
     Yellow,
     Magenta,
     Cyan,
+    Orange,
     Empty,
 }
 
@@ -71,10 +76,11 @@ impl TetrisBlock {
         let color = match block {
             TBlockType::IBlock => TBlockColor::Blue,
             TBlockType::JBlock => TBlockColor::Green,
-            TBlockType::LBlock => TBlockColor::Yellow,
+            TBlockType::LBlock => TBlockColor::Orange,
             TBlockType::ZBlock => TBlockColor::Red,
             TBlockType::SBlock => TBlockColor::Magenta,
             TBlockType::TBlock => TBlockColor::Cyan,
+            TBlockType::OBlock => TBlockColor::Yellow,
         };
 
         let pos = block.get().map(|f| {
