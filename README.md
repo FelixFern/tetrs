@@ -15,7 +15,7 @@ A command-line interface (CLI) based Tetris game built with Rust and `ratatui.rs
 
 ## Introduction
 
-This project is a CLI-based implementation of the classic Tetris game, developed using Rust and the `ratatui.rs` library. `ratatui.rs` is a library for building rich terminal user interfaces. The main objective of this project is for me to learn more about how to write code in Rust programming, as this is my first ever Rust only repository
+This project is a CLI-based implementation of the classic Tetris game, developed using Rust and the `ratatui.rs` library. `ratatui.rs` is a library for building rich terminal user interfaces. The main objective of this project is for me to learn more about how to write code in Rust programming, as this is my first ever Rust-only repository
 
 ## Features (WORK IN PROGRESS)
 
@@ -44,6 +44,8 @@ This project is a CLI-based implementation of the classic Tetris game, developed
    cargo run  
 
 ## Controls
-- Left Arrow (move tetris block one to the left)
-- Right Arrow (move tetris block one to the right)
+- Left Arrow (move Tetris block one to the left)
+- Right Arrow (move Tetris block one to the right)
 - Q (quit the game)
+- Z (rotate Tetris block counter-clockwise)
+- X (rotate Tetris block clockwise)
