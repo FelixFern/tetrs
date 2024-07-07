@@ -1,7 +1,9 @@
 # Tetrs - a very-very work in progress project
-<img width="1710" alt="image" src="https://github.com/FelixFern/tetrs/assets/28957554/969aa672-f151-4ffd-83f7-012917540d26">
-
 A command-line interface (CLI) based Tetris game built with Rust and `ratatui.rs`.
+<p align="center">
+  <img width="500" alt="image" src="https://github.com/FelixFern/tetrs/assets/28957554/969aa672-f151-4ffd-83f7-012917540d26">
+</p>
+
 
 ## Table of Contents
 
