@@ -141,7 +141,7 @@ impl TetrisBlock {
     pub fn rotate_clockwise(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {
         let center_x = self.pos.iter().map(|&(x, _)| x as i8).sum::<i8>() / 4;
         let center_y = self.pos.iter().map(|&(_, y)| y as i8).sum::<i8>() / 4;
-        let mut rotateable = true;
+        let mut rotatable = true;
 
         let mut new_pos = self.pos.clone();
 
@@ -153,14 +153,14 @@ impl TetrisBlock {
             let rotated_y = center_y - rel_x;
 
             if self.is_colliding(grid, (rotated_x, rotated_y)) {
-                rotateable = false;
+                rotatable = false;
                 break;
             }
 
             *pos = (rotated_x as u8, rotated_y as u8);
         }
 
-        if rotateable {
+        if rotatable {
             self.pos = new_pos
         }
     }
@@ -168,7 +168,7 @@ impl TetrisBlock {
     pub fn rotate_counter_clockwise(&mut self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS]) {
         let center_x = self.pos.iter().map(|&(x, _)| x as i8).sum::<i8>() / 4;
         let center_y = self.pos.iter().map(|&(_, y)| y as i8).sum::<i8>() / 4;
-        let mut rotateable = true;
+        let mut rotatable = true;
 
         let mut new_pos = self.pos.clone();
 
@@ -180,20 +180,24 @@ impl TetrisBlock {
             let rotated_y = center_y + rel_x;
 
             if self.is_colliding(grid, (rotated_x, rotated_y)) {
-                rotateable = false;
+                rotatable = false;
                 break;
             }
 
             *pos = (rotated_x as u8, rotated_y as u8);
         }
 
-        if rotateable {
+        if rotatable {
             self.pos = new_pos
         }
     }
 
     fn is_colliding(&self, grid: [[TBlockColor; NUM_COLS]; NUM_ROWS], new_pos: (i8, i8)) -> bool {
-        if new_pos.1 > (NUM_ROWS - 1) as i8 || new_pos.0 > (NUM_COLS - 1) as i8 || new_pos.0 < 0 {
+        if new_pos.1 > (NUM_ROWS - 1) as i8
+            || new_pos.0 > (NUM_COLS - 1) as i8
+            || new_pos.0 < 0
+            || new_pos.1 < 0
+        {
             return true;
         } else if grid[new_pos.1 as usize][new_pos.0 as usize] != TBlockColor::Empty {
             return true;
